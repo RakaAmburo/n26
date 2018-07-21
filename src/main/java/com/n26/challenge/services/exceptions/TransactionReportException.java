@@ -4,8 +4,8 @@ public class TransactionReportException extends RuntimeException {
 	
 	private static final long serialVersionUID = 1L;
 
-	public TransactionReportException(String message) {
-		super(message);
+	public TransactionReportException(long timeDiff) {
+		super(String.format("Transaction out of range for %d seconds", timeDiff));
 	}
 
 }

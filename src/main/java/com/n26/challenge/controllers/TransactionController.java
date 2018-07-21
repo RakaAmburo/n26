@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.n26.challenge.services.exceptions.TransactionReportException;
-import com.n26.challenge.models.Transaction;
+import com.n26.challenge.entities.Transaction;
 import com.n26.challenge.services.TransactionService;
 
 import org.apache.logging.log4j.LogManager;

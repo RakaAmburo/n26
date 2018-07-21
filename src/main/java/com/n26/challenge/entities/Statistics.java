@@ -1,12 +1,24 @@
-package com.n26.challenge.models;
+package com.n26.challenge.entities;
 
 public class Statistics {
 
-	private Double sum;
-	private Double avg;
-	private Double max;
-	private Double min;
-	private Long count;
+	private double sum;
+	private double avg;
+	private double max;
+	private double min;
+	private long count;
+	
+	public Statistics() {
+		this(0, 0, 0, 0, 0);
+	}
+
+	public Statistics(double sum, double avg, double max, double min, long count) {
+		this.sum = sum;
+		this.avg = avg;
+		this.max = max;
+		this.min = min;
+		this.count = count;
+	}
 
 	public Double getSum() {
 		return sum;

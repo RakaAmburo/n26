@@ -1,4 +1,4 @@
-package com.n26.n26;
+package com.n26.challenge;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
