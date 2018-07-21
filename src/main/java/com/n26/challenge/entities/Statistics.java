@@ -7,10 +7,6 @@ public class Statistics {
 	private double max;
 	private double min;
 	private long count;
-	
-	public Statistics() {
-		this(0, 0, 0, 0, 0);
-	}
 
 	public Statistics(double sum, double avg, double max, double min, long count) {
 		this.sum = sum;
@@ -20,43 +16,43 @@ public class Statistics {
 		this.count = count;
 	}
 
-	public Double getSum() {
+	public double getSum() {
 		return sum;
 	}
 
-	public void setSum(Double sum) {
+	public void setSum(double sum) {
 		this.sum = sum;
 	}
 
-	public Double getAvg() {
+	public double getAvg() {
 		return avg;
 	}
 
-	public void setAvg(Double avg) {
+	public void setAvg(double avg) {
 		this.avg = avg;
 	}
 
-	public Double getMax() {
+	public double getMax() {
 		return max;
 	}
 
-	public void setMax(Double max) {
+	public void setMax(double max) {
 		this.max = max;
 	}
 
-	public Double getMin() {
+	public double getMin() {
 		return min;
 	}
 
-	public void setMin(Double min) {
+	public void setMin(double min) {
 		this.min = min;
 	}
 
-	public Long getCount() {
+	public long getCount() {
 		return count;
 	}
 
-	public void setCount(Long count) {
+	public void setCount(long count) {
 		this.count = count;
 	}
 

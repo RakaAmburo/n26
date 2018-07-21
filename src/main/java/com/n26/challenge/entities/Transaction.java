@@ -10,6 +10,11 @@ public class Transaction {
 	private long timestamp;
 	
 	private static final SimpleDateFormat FORMATTER = new SimpleDateFormat("HH:mm:ss");
+	
+	public Transaction(double amount, long timestamp) {
+		this.amount = amount;
+		this.timestamp = timestamp;
+	}
 
 	public double getAmount() {
 		return amount;

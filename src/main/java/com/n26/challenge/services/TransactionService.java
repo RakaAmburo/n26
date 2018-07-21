@@ -1,16 +1,15 @@
 package com.n26.challenge.services;
 
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
+import java.util.Comparator;
 import java.util.DoubleSummaryStatistics;
 import java.util.Queue;
-import java.util.TimeZone;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,35 +21,41 @@ import com.n26.challenge.services.exceptions.TransactionReportException;
 public class TransactionService {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	private static final SimpleDateFormat FORMATTER = new SimpleDateFormat("HH:mm:ss");
-	private final Queue<Transaction> transactions = new LinkedBlockingQueue<Transaction>();
-	private volatile Statistics stats = new Statistics();
+	private final Queue<Transaction> transactions = new PriorityBlockingQueue<Transaction>(10, Comparator.comparingLong(Transaction::getTimestamp));
+	private volatile Statistics stats;
 
 	@Value("${time.range}")
 	private long timeRangeInSeconds;
+	
+	@Autowired
+	TimeCustomFormat tcf;
 
 	public void reportTransaction(Transaction transaction) {
 
 		validateTransTime(transaction);
 		transactions.add(transaction);
+		
+		if (stats == null) {
+			double amount = transaction.getAmount();
+			stats = new Statistics(amount, amount, amount, amount, 1);
+		} else {
+			double amount = transaction.getAmount();
+			double sum = stats.getSum() + amount;
+			long count = stats.getCount() + 1;
+			double avg = (stats.getAvg() * stats.getCount() + amount) / count;
+			double max = Math.max(stats.getMax(), amount);
+			double min = Math.min(stats.getMin(), amount);
 
-		double amount = transaction.getAmount();
-		double sum = stats.getSum() + amount;
-		long count = stats.getCount() + 1;
-		double avg = (stats.getAvg() * stats.getCount() + amount) / count;
-		double max = Math.max(stats.getMax(), amount);
-		double min = Math.min(stats.getMin(), amount);
-
-		stats = new Statistics(sum, avg, max, min, count);
+			stats = new Statistics(sum, avg, max, min, count);
+		}
 	}
 
 	private void validateTransTime(Transaction transaction) {
 
 		Instant transactionTime = Instant.ofEpochMilli(transaction.getTimestamp());
-		Instant timeLimit = Instant.now().minusSeconds(timeRangeInSeconds);
-		Date date = new Date(Instant.now().toEpochMilli());
-		FORMATTER.setTimeZone(TimeZone.getTimeZone("UTC"));
-		LOGGER.info("Adding trans: {} / {}", Instant.now().toEpochMilli(), FORMATTER.format(date));
+		Instant now = Instant.now();
+		Instant timeLimit = now.minusSeconds(timeRangeInSeconds);
+		LOGGER.info("Adding trans at: {} / {}", now.toEpochMilli(), tcf.getFormattedTime(now));
 		if (transactionTime.isBefore(timeLimit)) {
 			Duration between = Duration.between(transactionTime, timeLimit);
 			throw new TransactionReportException(between.getSeconds());
