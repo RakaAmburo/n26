@@ -23,7 +23,7 @@ public class TransactionController {
 	@Autowired
 	TransactionService service;
 	
-    @PostMapping
+    @PostMapping("/transactions")
     @ResponseStatus(HttpStatus.CREATED)
 	public void transactions (@RequestBody Transaction t) {
     	service.reportTransaction(t);

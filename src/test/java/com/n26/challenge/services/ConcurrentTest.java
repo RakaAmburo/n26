@@ -1,6 +1,8 @@
 package com.n26.challenge.services;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -10,19 +12,19 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Test {
+public class ConcurrentTest {
 
 	public static void main(String[] args) {
-		
-		ExecutorService executor = Executors.newFixedThreadPool(5);
-		
+
+		ExecutorService executor = Executors.newFixedThreadPool(6);
+
 		Callable<Integer> task = () -> {
-		    try {
-		        
-		    	try {
-					
+			try {
+
+				try {
+
 					while (true) {
-						
+
 						URL url = new URL("http://192.168.0.26:8095/n26/transactions");
 						HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 						conn.setDoOutput(true);
@@ -40,18 +42,17 @@ public class Test {
 							System.out.println("Response error adding transactions");
 						}
 						conn.disconnect();
-						
+
 						Thread.sleep(generateRandomIntBet(100, 500));
 					}
-								
+
 				} catch (IOException e) {
 					System.out.println("Connection error posting transaction");
 				}
-		        return 123;
-		    }
-		    catch (InterruptedException e) {
-		        throw new IllegalStateException("task interrupted", e);
-		    }
+				return 123;
+			} catch (InterruptedException e) {
+				throw new IllegalStateException("task interrupted", e);
+			}
 		};
 
 		executor.submit(task);
@@ -60,8 +61,54 @@ public class Test {
 		executor.submit(task);
 		executor.submit(task);
 
+		Callable<Integer> task2 = () -> {
+			try {
+
+				try {
+
+					int outInLine = 0;
+					
+					while (true) {
+
+						URL url = new URL("http://192.168.0.26:8095/n26/statistics");
+						HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+						//conn.setDoOutput(true);
+						conn.setRequestMethod("GET");
+						outInLine ++;
+						try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+						   if (outInLine % 30 == 0) {
+							   System.out.println("OK ");
+						   } else {
+							   System.out.print("OK ");
+						   }
+                           
+                           
+						} catch (Exception e) {
+							System.out.println("problem reading stats");
+						}
+
+						if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+							System.out.println("Response error getting stats");
+						}
+						conn.disconnect();
+
+						Thread.sleep(1000);
+					}
+
+				} catch (IOException e) {
+					System.out.println("Connection error getting stats");
+				}
+				return 123;
+			} catch (InterruptedException e) {
+				throw new IllegalStateException("task2 interrupted", e);
+			}
+		};
+		
+		//executor.submit(task2);
+		executor.submit(task2);
+
 	}
-	
+
 	private static int generateRandomIntBet(int a, int b) {
 		return new Random().nextInt(a) + b;
 	}

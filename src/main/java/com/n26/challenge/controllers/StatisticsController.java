@@ -13,7 +13,7 @@ public class StatisticsController {
 	@Autowired
 	StatisticsService service;
 	
-	@GetMapping
+	@GetMapping("/statistics")
 	public Statistics statistics() {
 		return service.getStatistics();
 	}

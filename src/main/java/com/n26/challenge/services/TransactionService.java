@@ -4,8 +4,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.DoubleSummaryStatistics;
+import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.concurrent.PriorityBlockingQueue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +21,7 @@ import com.n26.challenge.services.exceptions.TransactionReportException;
 public class TransactionService {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	private final Queue<Transaction> transactions = new PriorityBlockingQueue<Transaction>(10, Comparator.comparingLong(Transaction::getTimestamp));
+	private final Queue<Transaction> transactions = new PriorityQueue<Transaction>(Comparator.comparingLong(Transaction::getTimestamp));
 	private volatile Statistics stats;
 
 	@Value("${time.range}")
@@ -30,7 +30,13 @@ public class TransactionService {
 	@Autowired
 	TimeCustomFormat tcf;
 
-	public void reportTransaction(Transaction transaction) {
+	
+	/**
+	 * Add transaction to the poll
+	 * 
+	 * @param transaction
+	 */
+	public synchronized void reportTransaction(Transaction transaction) {
 
 		validateTransTime(transaction);
 		transactions.add(transaction);
@@ -50,7 +56,13 @@ public class TransactionService {
 		}
 	}
 
-	private void validateTransTime(Transaction transaction) {
+	
+	/**
+	 * External validation for transaction timestamp
+	 * 
+	 * @param transaction
+	 */
+	public void validateTransTime(Transaction transaction) {
 
 		Instant transactionTime = Instant.ofEpochMilli(transaction.getTimestamp());
 		Instant now = Instant.now();
@@ -62,6 +74,7 @@ public class TransactionService {
 		}
 	}
 
+	
 	private boolean isOutDated(Transaction transaction) {
 
 		Instant transactionTime = Instant.ofEpochMilli(transaction.getTimestamp());
@@ -69,7 +82,13 @@ public class TransactionService {
 		return transactionTime.isBefore(timeLimit);
 	}
 
-	public void removeInvalidTransactions() {
+	
+	/**
+	 * Remove old timestamp transactions.
+	 * Synchronized for data consistency.
+	 * 
+	 */
+	public synchronized void removeInvalidTransactions() {
 
 		Transaction lastValidTransaction = transactions.peek();
 		int removedTransactions = 0;
@@ -99,6 +118,7 @@ public class TransactionService {
 	}
 	
 	public Statistics getStats() {
+		LOGGER.info("Get stats!");
 		return stats;
 	}
 

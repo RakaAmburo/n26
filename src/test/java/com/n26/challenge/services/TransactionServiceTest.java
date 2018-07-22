@@ -18,9 +18,57 @@ import com.n26.challenge.entities.Statistics;
 import com.n26.challenge.entities.Transaction;
 import com.n26.challenge.services.exceptions.TransactionReportException;
 
-public class TransactionServiceTest {// mejorar el date y ordenar lista de trans
+public class TransactionServiceTest {
 
 	private static final Logger LOGGER = LogManager.getLogger();
+	
+	@Test
+	public void testRemoveInvalidTransactions() {
+		TransactionService transactionService = new TransactionService();
+		ReflectionTestUtils.setField(transactionService, "timeRangeInSeconds", 60);
+		ReflectionTestUtils.setField(transactionService, "tcf", new TimeCustomFormat());
+		List<Transaction> validTransactions = new LinkedList<Transaction>();
+		
+		
+		IntStream.rangeClosed(1, 20).forEach(a -> {
+			try {
+				int randomSecs = generateRandomIntBet(1, 25);
+				Transaction t = new Transaction(generateDouble(),
+						Instant.now().minusSeconds(randomSecs).toEpochMilli());
+				transactionService.reportTransaction(t);
+				validTransactions.add(t);
+			} catch (TransactionReportException ex) {
+				LOGGER.info("Invalid timestamp");
+			}
+		});
+	
+	    //Will be removed	
+		IntStream.rangeClosed(1, 20).forEach(a -> {
+			try {
+				int randomSecs = generateRandomIntBet(35, 30);
+				Transaction t = new Transaction(generateDouble(),
+						Instant.now().minusSeconds(randomSecs).toEpochMilli());
+				transactionService.reportTransaction(t);
+				//validTransactions.add(t);
+			} catch (TransactionReportException ex) {
+				LOGGER.info("Invalid timestamp");
+			}
+		});
+		ReflectionTestUtils.setField(transactionService, "timeRangeInSeconds", 30);
+		transactionService.removeInvalidTransactions();
+		
+		Statistics s = transactionService.getStats();
+		Statistics myStats = evaluateNewStatistics(validTransactions);
+		
+		assertEquals(validTransactions.size(), 20);
+		assertEquals(s.getCount(), myStats.getCount(), 0.0001);
+		assertEquals(s.getAvg(), myStats.getAvg(), 0.0001);
+		assertEquals(s.getMax(), myStats.getMax(), 0.0001);
+		assertEquals(s.getMin(), myStats.getMin(), 0.0001);
+		assertEquals(s.getSum(), myStats.getSum(), 0.0001);
+	}
+	
+	
 	@Test
 	public void testReportTransaction() {
 		TransactionService transactionService = new TransactionService();
@@ -37,14 +85,14 @@ public class TransactionServiceTest {// mejorar el date y ordenar lista de trans
 				transactionService.reportTransaction(t);
 				validTransactions.add(t);
 			} catch (TransactionReportException ex) {
-
+				LOGGER.info("Invalid timestamp");
 			}
 		});
 
 		// Invalid
 		IntStream.rangeClosed(1, 20).forEach(a -> {
 			try {
-				int randomSecs = generateRandomIntBet(60, 120);
+				int randomSecs = generateRandomIntBet(65, 70);
 				Transaction t = new Transaction(generateDouble(),
 						Instant.now().minusSeconds(randomSecs).toEpochMilli());
 				transactionService.reportTransaction(t);
@@ -67,7 +115,7 @@ public class TransactionServiceTest {// mejorar el date y ordenar lista de trans
 	}
 
 	private int generateRandomIntBet(int a, int b) {
-		return new Random().nextInt(a) + b;
+		return new Random().nextInt(b) + a;
 	}
 
 	private double generateDouble() {

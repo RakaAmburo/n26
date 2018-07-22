@@ -22,6 +22,10 @@ public class TransactionRemoval {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
+	
+	/**
+	 * shceduled task configured in applicationproperties
+	 */
 	@Scheduled(fixedRateString = "${removal.fixed.rate}")
 	public void removeTransactions() {
 		LOGGER.info("Removing outdated transactions:");
