@@ -29,6 +29,7 @@ public class TransactionServiceTest {
 		ReflectionTestUtils.setField(transactionService, "tcf", new TimeCustomFormat());
 		List<Transaction> validTransactions = new LinkedList<Transaction>();
 		
+		transactionService.removeInvalidTransactions();
 		
 		IntStream.rangeClosed(1, 20).forEach(a -> {
 			try {
@@ -75,6 +76,8 @@ public class TransactionServiceTest {
 		ReflectionTestUtils.setField(transactionService, "timeRangeInSeconds", 60);
 		ReflectionTestUtils.setField(transactionService, "tcf", new TimeCustomFormat());
 		List<Transaction> validTransactions = new LinkedList<Transaction>();
+		
+		transactionService.removeInvalidTransactions();
 
 		// Valid
 		IntStream.rangeClosed(1, 20).forEach(a -> {

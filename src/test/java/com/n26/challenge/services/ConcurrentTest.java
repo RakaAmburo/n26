@@ -12,6 +12,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Concurrent test to verify the functionallity and 
+ * the consistency of the transaction and statistics information
+ * 
+ * @author pablo.paparini
+ *
+ */
 public class ConcurrentTest {
 
 	public static void main(String[] args) {

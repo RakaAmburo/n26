@@ -1,5 +1,7 @@
 package com.n26.challenge.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class Statistics {
 
 	private double sum;
@@ -7,6 +9,16 @@ public class Statistics {
 	private double max;
 	private double min;
 	private long count;
+	@JsonIgnore
+	private long lastTransactionTime;
+	
+	public Statistics() {
+		this.sum = 0;
+		this.avg = 0;
+		this.max = 0;
+		this.min = 0;
+		this.count = 0;
+	}
 
 	public Statistics(double sum, double avg, double max, double min, long count) {
 		this.sum = sum;
@@ -55,5 +67,15 @@ public class Statistics {
 	public void setCount(long count) {
 		this.count = count;
 	}
+
+	public long getLastTransactionTime() {
+		return lastTransactionTime;
+	}
+
+	public void setLastTransactionTime(long lastTransactionTime) {
+		this.lastTransactionTime = lastTransactionTime;
+	}
+	
+	
 
 }

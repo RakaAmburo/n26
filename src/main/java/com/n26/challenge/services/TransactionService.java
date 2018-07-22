@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.DoubleSummaryStatistics;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
@@ -21,30 +22,28 @@ import com.n26.challenge.services.exceptions.TransactionReportException;
 public class TransactionService {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	private final Queue<Transaction> transactions = new PriorityQueue<Transaction>(Comparator.comparingLong(Transaction::getTimestamp));
-	private volatile Statistics stats;
+	private final Queue<Transaction> transactions = new PriorityQueue<Transaction>(
+			Comparator.comparingLong(Transaction::getTimestamp));
+	private volatile Statistics stats = new Statistics();
 
 	@Value("${time.range}")
 	private long timeRangeInSeconds;
-	
+
 	@Autowired
 	TimeCustomFormat tcf;
 
-	
 	/**
 	 * Add transaction to the poll
 	 * 
 	 * @param transaction
 	 */
-	public synchronized void reportTransaction(Transaction transaction) {
+	public void reportTransaction(Transaction transaction) {
 
 		validateTransTime(transaction);
-		transactions.add(transaction);
-		
-		if (stats == null) {
-			double amount = transaction.getAmount();
-			stats = new Statistics(amount, amount, amount, amount, 1);
-		} else {
+
+		synchronized (this) {
+			transactions.add(transaction);
+
 			double amount = transaction.getAmount();
 			double sum = stats.getSum() + amount;
 			long count = stats.getCount() + 1;
@@ -53,10 +52,11 @@ public class TransactionService {
 			double min = Math.min(stats.getMin(), amount);
 
 			stats = new Statistics(sum, avg, max, min, count);
+			stats.setLastTransactionTime(transactions.peek().getTimestamp());
 		}
+
 	}
 
-	
 	/**
 	 * External validation for transaction timestamp
 	 * 
@@ -74,7 +74,6 @@ public class TransactionService {
 		}
 	}
 
-	
 	private boolean isOutDated(Transaction transaction) {
 
 		Instant transactionTime = Instant.ofEpochMilli(transaction.getTimestamp());
@@ -82,24 +81,26 @@ public class TransactionService {
 		return transactionTime.isBefore(timeLimit);
 	}
 
-	
 	/**
-	 * Remove old timestamp transactions.
-	 * Synchronized for data consistency.
+	 * Remove old timestamp transactions. Synchronized for data consistency.
 	 * 
 	 */
-	public synchronized void removeInvalidTransactions() {
+	public void removeInvalidTransactions() {
 
-		Transaction lastValidTransaction = transactions.peek();
 		int removedTransactions = 0;
-		while (lastValidTransaction != null && isOutDated(lastValidTransaction)) {
-			LOGGER.info("Removing trans (HH:mm:ss): {}", lastValidTransaction);
-			transactions.poll();
-			removedTransactions++;
-			lastValidTransaction = transactions.peek();
-		}
 
-		evaluateNewStatistics();
+		synchronized (this) {
+			Transaction lastValidTransaction = transactions.peek();
+
+			while (lastValidTransaction != null && isOutDated(lastValidTransaction)) {
+				LOGGER.info("Removing trans (HH:mm:ss): {}", lastValidTransaction);
+				transactions.poll();
+				removedTransactions++;
+				lastValidTransaction = transactions.peek();
+			}
+
+			evaluateNewStatistics();
+		}
 
 		if (removedTransactions == 0) {
 			LOGGER.info("No transactions to remove!");
@@ -115,10 +116,13 @@ public class TransactionService {
 		double max = newStatistics.getMax();
 		double min = newStatistics.getMin();
 		stats = new Statistics(sum, avg, max, min, count);
+		stats.setLastTransactionTime(
+				Optional.ofNullable(transactions.peek()).orElse(new Transaction(0, 0)).getTimestamp());
 	}
-	
+
 	public Statistics getStats() {
-		LOGGER.info("Get stats!");
+		LOGGER.info(String.format("Get stats! now: %s last:%s", tcf.getFormattedTime(Instant.now()),
+				tcf.getFormattedTime(Instant.ofEpochMilli(stats.getLastTransactionTime()))));
 		return stats;
 	}
 
