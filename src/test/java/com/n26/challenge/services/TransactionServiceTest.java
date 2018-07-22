@@ -61,12 +61,12 @@ public class TransactionServiceTest {
 		Statistics s = transactionService.getStats();
 		Statistics myStats = evaluateNewStatistics(validTransactions);
 		
-		assertEquals(validTransactions.size(), 20);
-		assertEquals(s.getCount(), myStats.getCount(), 0.0001);
-		assertEquals(s.getAvg(), myStats.getAvg(), 0.0001);
-		assertEquals(s.getMax(), myStats.getMax(), 0.0001);
-		assertEquals(s.getMin(), myStats.getMin(), 0.0001);
-		assertEquals(s.getSum(), myStats.getSum(), 0.0001);
+		assertEquals(20, validTransactions.size());
+		assertEquals(myStats.getCount(), 0.0001, s.getCount());
+		assertEquals(myStats.getAvg(), 0.0001, s.getAvg());
+		assertEquals(myStats.getMax(), 0.0001, s.getMax());
+		assertEquals(myStats.getMin(), 0.0001, s.getMin());
+		assertEquals(myStats.getSum(), 0.0001, s.getSum());
 	}
 	
 	
@@ -108,12 +108,12 @@ public class TransactionServiceTest {
 		Statistics s = transactionService.getStats();
 		Statistics myStats = evaluateNewStatistics(validTransactions);
 
-		assertEquals(validTransactions.size(), 20);
-		assertEquals(s.getCount(), myStats.getCount(), 0.0001);
-		assertEquals(s.getAvg(), myStats.getAvg(), 0.0001);
-		assertEquals(s.getMax(), myStats.getMax(), 0.0001);
-		assertEquals(s.getMin(), myStats.getMin(), 0.0001);
-		assertEquals(s.getSum(), myStats.getSum(), 0.0001);
+		assertEquals(20, validTransactions.size());
+		assertEquals(myStats.getCount(), 0.0001, s.getCount());
+		assertEquals(myStats.getAvg(), 0.0001, s.getAvg());
+		assertEquals(myStats.getMax(), 0.0001, s.getMax());
+		assertEquals(myStats.getMin(), 0.0001, s.getMin());
+		assertEquals(myStats.getSum(), 0.0001, s.getSum());
 
 	}
 

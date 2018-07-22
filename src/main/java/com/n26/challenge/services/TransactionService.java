@@ -67,7 +67,7 @@ public class TransactionService {
 		Instant transactionTime = Instant.ofEpochMilli(transaction.getTimestamp());
 		Instant now = Instant.now();
 		Instant timeLimit = now.minusSeconds(timeRangeInSeconds);
-		LOGGER.info("Adding trans at: {} / {}", now.toEpochMilli(), tcf.getFormattedTime(now));
+		//LOGGER.info("Adding trans at: {} / {}", now.toEpochMilli(), tcf.getFormattedTime(now));
 		if (transactionTime.isBefore(timeLimit)) {
 			Duration between = Duration.between(transactionTime, timeLimit);
 			throw new TransactionReportException(between.getSeconds());
@@ -93,7 +93,7 @@ public class TransactionService {
 			Transaction lastValidTransaction = transactions.peek();
 
 			while (lastValidTransaction != null && isOutDated(lastValidTransaction)) {
-				LOGGER.info("Removing trans (HH:mm:ss): {}", lastValidTransaction);
+				//LOGGER.info("Removing trans (HH:mm:ss): {}", lastValidTransaction);
 				transactions.poll();
 				removedTransactions++;
 				lastValidTransaction = transactions.peek();
@@ -104,6 +104,8 @@ public class TransactionService {
 
 		if (removedTransactions == 0) {
 			LOGGER.info("No transactions to remove!");
+		} else {
+			LOGGER.info("Removed {} transactions", removedTransactions);
 		}
 	}
 

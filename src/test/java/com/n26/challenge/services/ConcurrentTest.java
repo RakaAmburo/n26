@@ -50,7 +50,7 @@ public class ConcurrentTest {
 						}
 						conn.disconnect();
 
-						Thread.sleep(generateRandomIntBet(100, 500));
+						Thread.sleep(generateRandomIntBet(1000, 1500));
 					}
 
 				} catch (IOException e) {
