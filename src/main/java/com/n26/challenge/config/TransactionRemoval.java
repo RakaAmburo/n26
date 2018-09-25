@@ -21,12 +21,16 @@ public class TransactionRemoval {
 	TimeCustomFormat tcf;
 
 	private static final Logger LOGGER = LogManager.getLogger();
+	
+	@Scheduled(fixedRateString = "${removal.fixed.rate}")
+	public void updateTransactionHolder() {
+		transactionService.updateTransactionList();
+	}
 
 	
 	/**
 	 * shceduled task configured in applicationproperties
 	 */
-	@Scheduled(fixedRateString = "${removal.fixed.rate}")
 	public void removeTransactions() {
 		LOGGER.info("Removing outdated transactions:");
 		LOGGER.info("Now (HH:mm:ss): {}", tcf.getFormattedTime(Instant.now()));

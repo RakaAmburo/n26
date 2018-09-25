@@ -32,7 +32,7 @@ public class ConcurrentTest {
 
 					while (true) {
 
-						URL url = new URL("http://192.168.0.26:8095/n26/transactions");
+						URL url = new URL("http://10.226.111.49:8095/n26/transactions");
 						HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 						conn.setDoOutput(true);
 						conn.setRequestMethod("POST");
@@ -50,7 +50,7 @@ public class ConcurrentTest {
 						}
 						conn.disconnect();
 
-						Thread.sleep(generateRandomIntBet(1000, 1500));
+						Thread.sleep(generateRandomIntBet(300, 600));
 					}
 
 				} catch (IOException e) {
@@ -77,7 +77,7 @@ public class ConcurrentTest {
 					
 					while (true) {
 
-						URL url = new URL("http://192.168.0.26:8095/n26/statistics");
+						URL url = new URL("http://10.226.111.49:8095/n26/statistics");
 						HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 						//conn.setDoOutput(true);
 						conn.setRequestMethod("GET");

@@ -2,10 +2,8 @@ package com.n26.challenge.services;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Comparator;
-import java.util.DoubleSummaryStatistics;
-import java.util.Optional;
-import java.util.PriorityQueue;
+import java.util.ArrayDeque;
+import java.util.Iterator;
 import java.util.Queue;
 
 import org.apache.logging.log4j.LogManager;
@@ -22,8 +20,8 @@ import com.n26.challenge.services.exceptions.TransactionReportException;
 public class TransactionService {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	private final Queue<Transaction> transactions = new PriorityQueue<Transaction>(
-			Comparator.comparingLong(Transaction::getTimestamp));
+	private static final int ARRAYBOUND = 60;
+	private final Queue<Statistics> transactions = new ArrayDeque<Statistics>();
 	private volatile Statistics stats = new Statistics();
 
 	@Value("${time.range}")
@@ -42,7 +40,7 @@ public class TransactionService {
 		validateTransTime(transaction);
 
 		synchronized (this) {
-			transactions.add(transaction);
+			//transactions.add(transaction);
 
 			double amount = transaction.getAmount();
 			double sum = stats.getSum() + amount;
@@ -52,9 +50,16 @@ public class TransactionService {
 			double min = Math.min(stats.getMin(), amount);
 
 			stats = new Statistics(sum, avg, max, min, count);
-			stats.setLastTransactionTime(transactions.peek().getTimestamp());
+			stats.setLastTransactionTime(transaction.getTimestamp());
 		}
 
+	}
+	
+	public synchronized void updateTransactionList() {
+		if (transactions.size() >= ARRAYBOUND) {
+			transactions.poll();
+		}
+		transactions.add(stats.reset());
 	}
 
 	/**
@@ -90,16 +95,16 @@ public class TransactionService {
 		int removedTransactions = 0;
 
 		synchronized (this) {
-			Transaction lastValidTransaction = transactions.peek();
+			Transaction lastValidTransaction = null;//transactions.peek();
 
 			while (lastValidTransaction != null && isOutDated(lastValidTransaction)) {
 				//LOGGER.info("Removing trans (HH:mm:ss): {}", lastValidTransaction);
 				transactions.poll();
 				removedTransactions++;
-				lastValidTransaction = transactions.peek();
+				lastValidTransaction = null;//transactions.peek();
 			}
 
-			evaluateNewStatistics();
+			//evaluateNewStatistics();
 		}
 
 		if (removedTransactions == 0) {
@@ -109,23 +114,46 @@ public class TransactionService {
 		}
 	}
 
-	private void evaluateNewStatistics() {
-		DoubleSummaryStatistics newStatistics = transactions.stream().mapToDouble(Transaction::getAmount)
-				.summaryStatistics();
-		int count = transactions.size();
-		double sum = newStatistics.getSum();
-		double avg = newStatistics.getAverage();
-		double max = newStatistics.getMax();
-		double min = newStatistics.getMin();
-		stats = new Statistics(sum, avg, max, min, count);
-		stats.setLastTransactionTime(
-				Optional.ofNullable(transactions.peek()).orElse(new Transaction(0, 0)).getTimestamp());
+	private synchronized Statistics evaluateNewStatistics() {
+		
+		int count = 0;
+		double sum = 0;
+		double avg = 0;
+		double max = 0;
+		double min = Double.MAX_VALUE;
+		long last = 0;
+		
+		Iterator<Statistics> dit = ((ArrayDeque<Statistics>)transactions).descendingIterator();
+		while (dit.hasNext()) {
+			Statistics s = dit.next();
+			count += s.getCount();
+			sum += s.getSum();
+			avg += s.getAvg();
+			max = Math.max(max, s.getMax());
+			min = Math.min(min, s.getMin());
+			last = s.getLastTransactionTime();
+			
+		}
+		if (min == Double.MAX_VALUE) {
+			min = 0;
+		}
+		avg = avg / count;
+		
+		Statistics calculatedStats = new Statistics(sum, avg, max, min, count);
+		calculatedStats.setLastTransactionTime(last);
+		return calculatedStats;
+		
 	}
 
 	public Statistics getStats() {
+		Statistics s = evaluateNewStatistics();
 		LOGGER.info(String.format("Get stats! now: %s last:%s", tcf.getFormattedTime(Instant.now()),
-				tcf.getFormattedTime(Instant.ofEpochMilli(stats.getLastTransactionTime()))));
-		return stats;
+				tcf.getFormattedTime(Instant.ofEpochMilli(s.getLastTransactionTime()))));
+		return s;
+	}
+	
+	public int getListSize() {
+		return transactions.size();
 	}
 
 }

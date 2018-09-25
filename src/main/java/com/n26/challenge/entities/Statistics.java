@@ -12,12 +12,20 @@ public class Statistics {
 	@JsonIgnore
 	private long lastTransactionTime;
 	
-	public Statistics() {
+	public Statistics reset() {
+		Statistics oldStats = new Statistics(this.sum, this.avg, this.max, this.min, this.count);
 		this.sum = 0;
 		this.avg = 0;
 		this.max = 0;
-		this.min = 0;
+		this.min = Double.MAX_VALUE;
 		this.count = 0;
+		//this.lastTransactionTime = 0;
+		oldStats.setLastTransactionTime(this.lastTransactionTime);
+		return oldStats;
+	}
+	
+	public Statistics() {
+		this.min = Double.MAX_VALUE;
 	}
 
 	public Statistics(double sum, double avg, double max, double min, long count) {
@@ -37,7 +45,7 @@ public class Statistics {
 	}
 
 	public double getAvg() {
-		return avg;
+		return (Double.isNaN(avg))?0:avg;
 	}
 
 	public void setAvg(double avg) {
